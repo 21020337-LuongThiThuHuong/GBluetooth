@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -53,6 +54,8 @@ class BluetoothActivity : AppCompatActivity() {
         binding = ActivityBluetoothBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.myDeviceName.text = Build.MODEL
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
         if (bluetoothAdapter == null) {
@@ -66,8 +69,9 @@ class BluetoothActivity : AppCompatActivity() {
             requestBluetoothPermissions()
         }
 
-        binding.connectBtn.setOnClickListener {
-            toggleBluetooth()
+        // Setup switch listener
+        binding.switchBluetooth.setOnCheckedChangeListener { _, isChecked ->
+            toggleBluetooth(isChecked)
         }
     }
 
@@ -78,27 +82,29 @@ class BluetoothActivity : AppCompatActivity() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun toggleBluetooth() {
+    private fun toggleBluetooth(enable: Boolean) {
         bluetoothAdapter?.let {
-            if (it.isEnabled) {
-                it.disable()
-                Snackbar.make(binding.root, "Đang tắt Bluetooth", Snackbar.LENGTH_SHORT).show()
+            if (enable) {
+                if (!it.isEnabled) {
+                    val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+                    Snackbar.make(binding.root, "Đang bật Bluetooth", Snackbar.LENGTH_SHORT).show()
+                }
             } else {
-                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-                Snackbar.make(binding.root, "Đang bật Bluetooth", Snackbar.LENGTH_SHORT).show()
+                if (it.isEnabled) {
+                    it.disable()
+                    Snackbar.make(binding.root, "Đang tắt Bluetooth", Snackbar.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     private fun checkBluetoothStatus() {
         if (bluetoothAdapter?.isEnabled == true) {
-            binding.connectBtn.text = "Disconnect"
-            binding.connectBtn.setBackgroundColor(getColor(R.color.purple_700))
+            binding.switchBluetooth.isChecked = true
             startDiscovery()
         } else {
-            binding.connectBtn.text = "Connect"
-            binding.connectBtn.setBackgroundColor(getColor(R.color.teal_200))
+            binding.switchBluetooth.isChecked = false
             devicesList.clear()
             deviceAdapter.notifyDataSetChanged()
         }

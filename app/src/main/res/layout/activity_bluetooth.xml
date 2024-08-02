@@ -4,20 +4,73 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:padding="20dp"
     tools:context=".BluetoothActivity">
 
-    <Button
-        android:id="@+id/connect_btn"
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_marginTop="15dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bluetooth"
+            android:textSize="20sp"
+            android:layout_centerVertical="true"
+            android:textStyle="bold" />
+
+        <Switch
+            android:id="@+id/switch_bluetooth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_marginTop="15dp"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tên thiết bị"
+            android:textSize="20sp"
+            android:layout_centerVertical="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/my_device_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:paddingRight="10dp"
+            android:textSize="16sp"
+            android:textColor="#808080"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true" />
+    </RelativeLayout>
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_margin="15dp"
-        android:text="Connect" />
+        android:text="THIẾT BỊ KHẢ DỤNG"
+        android:layout_marginTop="15dp"
+        android:textSize="20sp"
+        android:layout_centerVertical="true" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/device_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="15dp"
         android:scrollbars="none" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="THIẾT BỊ MỚI"
+        android:layout_marginTop="15dp"
+        android:textSize="20sp"
+        android:layout_centerVertical="true" />
 </LinearLayout>
