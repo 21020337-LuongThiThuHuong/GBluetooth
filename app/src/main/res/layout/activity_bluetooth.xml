@@ -9,15 +9,15 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_marginTop="15dp"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:text="Bluetooth"
             android:textSize="20sp"
-            android:layout_centerVertical="true"
             android:textStyle="bold" />
 
         <Switch
@@ -30,47 +30,72 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_marginTop="15dp"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:text="Tên thiết bị"
             android:textSize="20sp"
-            android:layout_centerVertical="true"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/my_device_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
-            android:paddingRight="10dp"
-            android:textSize="16sp"
-            android:textColor="#808080"
+            android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:layout_alignParentRight="true" />
+            android:paddingRight="10dp"
+            android:text=""
+            android:textColor="#808080"
+            android:textSize="16sp" />
     </RelativeLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="THIẾT BỊ KHẢ DỤNG"
-        android:layout_marginTop="15dp"
-        android:textSize="20sp"
-        android:layout_centerVertical="true" />
+        android:layout_marginTop="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Hiển thị các bluetooth ko tên"
+            android:textSize="20sp" />
+
+        <Switch
+            android:id="@+id/show_unknown_device"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="THIẾT BỊ KHẢ DỤNG"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/reload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/reload" />
+    </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/device_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="THIẾT BỊ MỚI"
-        android:layout_marginTop="15dp"
-        android:textSize="20sp"
-        android:layout_centerVertical="true" />
 </LinearLayout>

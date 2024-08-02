@@ -3,6 +3,7 @@ package com.example.gbluetooth
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -22,7 +23,7 @@ class BluetoothActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityBluetoothBinding
     private var bluetoothAdapter: BluetoothAdapter? = null
-    private val devicesList = mutableListOf<String>()
+    private val devicesList = mutableListOf<Device>()
     private lateinit var deviceAdapter: DeviceAdapter
 
     private val bluetoothReceiver = object : BroadcastReceiver() {
@@ -38,10 +39,39 @@ class BluetoothActivity : AppCompatActivity() {
                 BluetoothDevice.ACTION_FOUND -> {
                     val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     device?.let {
-                        val deviceName = it.name ?: "Unknown Device"
-                        val deviceAddress = it.address
-                        devicesList.add("$deviceName\n$deviceAddress")
-                        deviceAdapter.notifyDataSetChanged()
+                        val deviceName = it.name
+                        if (binding.showUnknownDevice.isChecked || deviceName != null) { // Thêm kiểm tra trạng thái của switch
+                            val displayName = deviceName ?: it.address
+                            val deviceAddress = it.address
+                            val deviceTypeDrawable = when {
+                                it.bluetoothClass.deviceClass == BluetoothClass.Device.PHONE_SMART  -> R.drawable.phone
+                                it.bluetoothClass.deviceClass == BluetoothClass.Device.COMPUTER_LAPTOP -> R.drawable.computer
+                                it.bluetoothClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES -> R.drawable.headphone
+                                it.bluetoothClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_VIDEO_GAMING_TOY -> R.drawable.game
+                                else -> R.drawable.bluetooth
+                            }
+                            val isConnected = isDeviceConnected(it) // Kiểm tra trạng thái kết nối
+                            devicesList.add(Device(displayName, deviceAddress, deviceTypeDrawable, isConnected))
+                            deviceAdapter.notifyDataSetChanged()
+                        }
+                    }
+                }
+
+                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                    val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    device?.let {
+                        when (it.bondState) {
+                            BluetoothDevice.BOND_BONDED -> {
+                                Snackbar.make(binding.root, "Device paired", Snackbar.LENGTH_SHORT).show()
+                            }
+                            BluetoothDevice.BOND_BONDING -> {
+                                Snackbar.make(binding.root, "Pairing...", Snackbar.LENGTH_SHORT).show()
+                            }
+                            BluetoothDevice.BOND_NONE -> {
+                                Snackbar.make(binding.root, "Pairing failed", Snackbar.LENGTH_SHORT).show()
+                            }
+                        }
+                        updateDeviceList()
                     }
                 }
             }
@@ -56,6 +86,14 @@ class BluetoothActivity : AppCompatActivity() {
 
         binding.myDeviceName.text = Build.MODEL
 
+        binding.reload.setOnClickListener {
+            reloadDevices()
+        }
+
+        binding.showUnknownDevice.setOnCheckedChangeListener { _, isChecked ->
+            updateDeviceList()
+        }
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
         if (bluetoothAdapter == null) {
@@ -66,6 +104,7 @@ class BluetoothActivity : AppCompatActivity() {
             checkBluetoothStatus()
             registerReceiver(bluetoothReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
             registerReceiver(bluetoothReceiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
+            registerReceiver(bluetoothReceiver, IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED))
             requestBluetoothPermissions()
         }
 
@@ -75,8 +114,29 @@ class BluetoothActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    private fun reloadDevices() {
+        devicesList.clear()
+        addConnectedDevices()
+        deviceAdapter.notifyDataSetChanged()
+        startDiscovery()
+    }
+
+    @SuppressLint("MissingPermission")
     private fun setupRecyclerView() {
-        deviceAdapter = DeviceAdapter(devicesList)
+        deviceAdapter = DeviceAdapter(devicesList) { device ->
+            val deviceAddress = device.address
+            val bluetoothDevice = bluetoothAdapter?.getRemoteDevice(deviceAddress)
+            bluetoothDevice?.let {
+                // Request pairing if necessary
+                if (it.bondState != BluetoothDevice.BOND_BONDED) {
+                    it.createBond()
+                } else {
+                    // Already paired, initiate connection if needed
+                    Snackbar.make(binding.root, "Device already paired", Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        }
         binding.deviceList.layoutManager = LinearLayoutManager(this)
         binding.deviceList.adapter = deviceAdapter
     }
@@ -140,6 +200,50 @@ class BluetoothActivity : AppCompatActivity() {
             bluetoothAdapter?.startDiscovery()
         } else {
             requestBluetoothPermissions()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun isDeviceConnected(device: BluetoothDevice): Boolean {
+        return device.bondState == BluetoothDevice.BOND_BONDED && bluetoothAdapter?.bondedDevices?.contains(device) == true
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun updateDeviceList() {
+        devicesList.clear()
+        val bondedDevices = bluetoothAdapter?.bondedDevices
+        bondedDevices?.forEach { device ->
+            val deviceName = device.name
+            if (binding.showUnknownDevice.isChecked == false || deviceName != null) {
+                val displayName = deviceName ?: device.address
+                val deviceAddress = device.address
+                val deviceTypeDrawable = when {
+                    device.bluetoothClass.deviceClass == BluetoothClass.Device.PHONE_SMART  -> R.drawable.phone
+                    device.bluetoothClass.deviceClass == BluetoothClass.Device.COMPUTER_LAPTOP -> R.drawable.computer
+                    device.bluetoothClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES -> R.drawable.headphone
+                    device.bluetoothClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_VIDEO_GAMING_TOY -> R.drawable.game
+                    else -> R.drawable.bluetooth
+                }
+                devicesList.add(Device(displayName, deviceAddress, deviceTypeDrawable, isDeviceConnected(device)))
+            }
+        }
+        deviceAdapter.notifyDataSetChanged()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun addConnectedDevices() {
+        val bondedDevices = bluetoothAdapter?.bondedDevices
+        bondedDevices?.forEach { device ->
+            val deviceName = device.name ?: device.address
+            val deviceAddress = device.address
+            val deviceTypeDrawable = when {
+                device.bluetoothClass.deviceClass == BluetoothClass.Device.PHONE_SMART  -> R.drawable.phone
+                device.bluetoothClass.deviceClass == BluetoothClass.Device.COMPUTER_LAPTOP -> R.drawable.computer
+                device.bluetoothClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES -> R.drawable.headphone
+                device.bluetoothClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_VIDEO_GAMING_TOY -> R.drawable.game
+                else -> R.drawable.bluetooth
+            }
+            devicesList.add(Device(deviceName, deviceAddress, deviceTypeDrawable, true))
         }
     }
 
